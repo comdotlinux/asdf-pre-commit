@@ -64,16 +64,19 @@ install_version() {
     url="$GH_REPO/releases/download/v${version}/${actualfilename}"
     download_release "$actualfilename" "$url"
 
-    actualsha256sumfilename="${actualfilename}.sha256sum"
-    sha256sumurl="$GH_REPO/releases/download/v${version}/${actualsha256sumfilename}"
-    download_release "$actualsha256sumfilename" "$sha256sumurl"
     local platform=$(uname | tr '[:upper:]' '[:lower:]')
-    local checksum_command=sha256sum
-    if [[ "x${platform}" = "xmacos" ]] ; then
-      checksum_command="shasum -a 256"
+
+    if [[ "x${platform}" != "xmacos" ]] ; then
+      actualsha256sumfilename="${actualfilename}.sha256sum"
+      sha256sumurl="$GH_REPO/releases/download/v${version}/${actualsha256sumfilename}"
+      download_release "$actualsha256sumfilename" "$sha256sumurl"
+      if ! sha256sum -c "${actualsha256sumfilename}" ; then
+        rm -f "${actualfilename}" "${actualsha256sumfilename}" && fail "Checksum mismatch, download is incorrect!"
+      else 
+        rm -f "${actualsha256sumfilename}" || echo "Could not delete the checksum file, this should not be a problem."
+      fi
     fi
-    "${checksum_command}" -c "${actualsha256sumfilename}" || ( rm -f "${actualfilename}" "${actualsha256sumfilename}"; fail "Checksum mismatch, download is incorrect!" )
-    rm -f "${actualsha256sumfilename}" || echo "Could not delete the checksum file, this should not be a problem."
+
     local actual_install_path="${install_path}/bin/${actualfilename}"
     mv "${actualfilename}" "${actual_install_path}"
     # TODO: Asert pre-commit executable exists.
