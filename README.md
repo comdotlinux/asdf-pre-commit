@@ -15,9 +15,15 @@
 - [License](#license)
 
 # Dependencies
+- Needs at least python 3.6 or greater. You should check the version you have with : ```readlink -f`command -v python3` ```
+- `bash`, `curl`, (linux only) `sha256sum`: generic POSIX utilities.
 
-- `bash`, `curl`, `tar`: generic POSIX utilities.
-- `SOME_ENV_VAR`: set this environment variable in your shell config to load the correct version of tool x.
+# Why
+The Pre commit hooks seem popular and I would like to use them in as may projects as I can.
+However, since it is python and we need pip to install, I would like to avoid that.
+
+Further, since there is a convininent pyzip (pyz) I can use that.
+And combined with asdf-vm the versioning is much easier.
 
 # Install
 
