@@ -72,7 +72,7 @@ install_version() {
       download_release "$actualsha256sumfilename" "$sha256sumurl"
       if ! sha256sum -c "${actualsha256sumfilename}"; then
         rm -f "${actualfilename}" "${actualsha256sumfilename}" && fail "Checksum mismatch, download is incorrect!"
-      else 
+      else
         rm -f "${actualsha256sumfilename}" || echo "Could not delete the checksum file, this should not be a problem."
       fi
     fi
