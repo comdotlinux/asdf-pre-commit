@@ -35,14 +35,11 @@ list_all_versions() {
 }
 
 download_release() {
-  local version filename url
-  version="$1"
-  filename="$2"
+  local filename url
+  filename="$1"
+  url="$2"
 
   # TODO: Adapt the release URL convention for pre-commit
-  url="$GH_REPO/archive/v${version}.tar.gz"
-
-  echo "* Downloading pre-commit release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 }
 
@@ -56,17 +53,31 @@ install_version() {
   fi
 
   # TODO: Adapt this to proper extension and adapt extracting strategy.
-  local release_file="$install_path/pre-commit-$version.tar.gz"
+  local release_file="pre-commit"
+  local actualfilename="${release_file}-${version}.pyz"
   (
-    mkdir -p "$install_path"
-    download_release "$version" "$release_file"
-    tar -xzf "$release_file" -C "$install_path" --strip-components=1 || fail "Could not extract $release_file"
-    rm "$release_file"
 
+    echo "* Downloading pre-commit release $version..."
+    local url sha256sumurl actualfilename actualsha256sumfilename
+    mkdir -p "$install_path/bin"
+
+    url="$GH_REPO/releases/download/v${version}/${actualfilename}"
+    download_release "$actualfilename" "$url"
+
+    actualsha256sumfilename="${actualfilename}.sha256sum"
+    sha256sumurl="$GH_REPO/releases/download/v${version}/${actualsha256sumfilename}"
+    download_release "$actualsha256sumfilename" "$sha256sumurl"
+
+    sha256sum -c "${actualsha256sumfilename}" || ( rm -f "${actualfilename}" "${actualsha256sumfilename}"; fail "Checksum mismatch, download is incorrect!" )
+    rm -f "${actualsha256sumfilename}" || echo "Could not delete the checksum file, this should not be a problem."
+    local actual_install_path="${install_path}/bin/${actualfilename}"
+    mv "${actualfilename}" "${actual_install_path}"
     # TODO: Asert pre-commit executable exists.
-    local tool_cmd
-    tool_cmd="$(echo "pre-commit -V" | cut -d' ' -f2-)"
-    test -x "$install_path/bin/$tool_cmd" || fail "Expected $install_path/bin/$tool_cmd to be executable."
+    local tool_cmd="pre-commit"
+    local tool_cmd_full_path="$install_path/bin/$tool_cmd"
+    chmod u+x "${actual_install_path}"
+    ln -s "${actual_install_path}" "${tool_cmd_full_path}"
+    test -x "${tool_cmd_full_path}" || fail "Expected ${tool_cmd_full_path} to be executable."
 
     echo "pre-commit $version installation was successful!"
   ) || (
