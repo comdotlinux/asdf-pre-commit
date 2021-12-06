@@ -32,7 +32,7 @@ Plugin:
 ```shell
 asdf plugin add pre-commit
 # or
-asdf plugin add https://github.com/comdotlinux/asdf-pre-commit.git
+asdf plugin add pre-commit https://github.com/comdotlinux/asdf-pre-commit.git
 ```
 
 pre-commit:
